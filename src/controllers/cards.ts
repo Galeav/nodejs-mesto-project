@@ -3,6 +3,8 @@ import { Response, NextFunction } from 'express';
 import Card from '../models/card';
 import { UserRequest } from '../types/user-request';
 import HTTP_STATUS from '../utils/http-status';
+import NotFoundError from '../errors/not-found';
+import ForbiddenError from '../errors/forbidden';
 
 /* eslint-disable no-unused-vars */
 export async function getCards(req: UserRequest, res: Response, next: NextFunction) {
@@ -33,11 +35,11 @@ export async function deleteCard(req: UserRequest, res: Response, next: NextFunc
 
     const card = await Card.findById(cardId);
     if (!card) {
-      return res.status(HTTP_STATUS.NOT_FOUND).send({ message: 'Запрашиваемая карточка не найдена' });
+      return next(new NotFoundError('Запрашиваемая карточка не найдена'));
     }
 
-    if (!userId || card.owner._id.toString() !== userId) {
-      return res.status(HTTP_STATUS.FORBIDDEN).send({ message: 'Вы не владелец запрашиваемой карточки' });
+    if (card.owner._id.toString() !== userId) {
+      return next(new ForbiddenError('Вы не владелец запрашиваемой карточки'));
     }
     await card.deleteOne();
     return res.send(card);
@@ -58,7 +60,7 @@ export async function likeCard(req: UserRequest, res: Response, next: NextFuncti
     );
 
     if (!updated) {
-      return res.status(HTTP_STATUS.NOT_FOUND).send({ message: 'Запрашиваемая карточка не найдена' });
+      return next(new NotFoundError('Запрашиваемая карточка не найдена'));
     }
 
     return res.send(updated);
@@ -79,7 +81,7 @@ export async function dislikeCard(req: UserRequest, res: Response, next: NextFun
     );
 
     if (!updated) {
-      return res.status(HTTP_STATUS.NOT_FOUND).send({ message: 'Запрашиваемая карточка не найдена' });
+      return next(new NotFoundError('Запрашиваемая карточка не найдена'));
     }
 
     return res.send(updated);

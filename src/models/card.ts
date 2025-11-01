@@ -1,5 +1,6 @@
 import { Schema, model, Types } from 'mongoose';
-import validator from 'validator';
+
+import urlRegex from '../utils/regex';
 
 export interface ICard {
   name: string;
@@ -14,17 +15,18 @@ const cardSchema = new Schema<ICard>(
     name: {
       type: String, required: true, minlength: 2, maxlength: 30,
     },
-    link: { type: String, required: true },
+    link: {
+      type: String,
+      required: true,
+      validate: {
+        validator: (val: string) => urlRegex.test(val),
+      },
+    },
     owner: { type: Schema.Types.ObjectId, ref: 'user', required: true },
     likes: [{ type: Schema.Types.ObjectId, ref: 'user', default: [] }],
     createdAt: { type: Date, default: Date.now },
   },
   { versionKey: false },
-);
-
-cardSchema.path('link').validate(
-  (val: string) => validator.isURL(val, { protocols: ['http', 'https'], require_protocol: true }),
-  'Неверно задана ссылка',
 );
 
 export default model<ICard>('card', cardSchema);

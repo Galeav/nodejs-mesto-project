@@ -1,28 +1,51 @@
 import { Schema, model } from 'mongoose';
 import validator from 'validator';
+import urlRegex from '../utils/regex';
 
 export interface IUser {
   name: string;
   about: string;
   avatar: string;
+  email: string;
+  password: string;
 }
 
 const userSchema = new Schema<IUser>(
   {
     name: {
-      type: String, required: true, minlength: 2, maxlength: 30,
+      type: String,
+      minlength: 2,
+      maxlength: 30,
+      default: 'Жак-Ив Кусто',
     },
     about: {
-      type: String, required: true, minlength: 2, maxlength: 200,
+      type: String,
+      minlength: 2,
+      maxlength: 200,
+      default: 'Исследователь',
     },
-    avatar: { type: String, required: true },
+    avatar: {
+      type: String,
+      default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+      validate: {
+        validator: (val: string) => urlRegex.test(val),
+      },
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      validate: {
+        validator: (val: string) => validator.isEmail(val),
+      },
+    },
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
   },
   { versionKey: false },
-);
-
-userSchema.path('avatar').validate(
-  (val: string) => validator.isURL(val, { protocols: ['http', 'https'], require_protocol: true }),
-  'Неверно задана ссылка',
 );
 
 export default model<IUser>('user', userSchema);
