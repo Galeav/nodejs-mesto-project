@@ -7,12 +7,12 @@ import config from './config';
 import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
 import errorHandler from './middlewares/error-handler';
-import HTTP_STATUS from './utils/http-status';
 import { createUser, login } from './controllers/users';
 import auth from './middlewares/auth';
 import { validateSignIn, validateSignUp } from './middlewares/validators';
 import requestLogger from './middlewares/request-logger';
 import errorLogger from './middlewares/error-logger';
+import NotFoundError from './errors/not-found';
 
 const app = express();
 
@@ -38,12 +38,12 @@ app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
 
 /* eslint-disable no-unused-vars */
-app.use((req, res) => {
-  res.status(HTTP_STATUS.NOT_FOUND).send({ message: 'Запрашиваемая страница не найдена' });
+app.use((req, res, next) => {
+  next(new NotFoundError('Запрашиваемая страница не найдена'));
 });
 
-app.use(errors());
 app.use(errorLogger);
+app.use(errors());
 app.use(errorHandler);
 
 app.listen(config.port, () => {});
